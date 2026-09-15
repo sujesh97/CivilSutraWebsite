@@ -1,4 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+
+function useReveal() {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('visible'); observer.unobserve(el) } },
+      { threshold: 0.15 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
+
+function Reveal({ className = 'reveal', delay, children, as: Tag = 'div', ...props }) {
+  const ref = useReveal()
+  const cls = `${className}${delay ? ` stagger-${delay}` : ''}`
+  return <Tag ref={ref} className={cls} {...props}>{children}</Tag>
+}
 
 const projects = [
   {
@@ -107,6 +128,11 @@ const services = [
   },
 ]
 
+const expertiseTags = [
+  'Consultancy', 'Plans', 'Elevation', 'Structural Design',
+  'Building Licence', 'Supervision', 'Estimates'
+]
+
 function App() {
   const [scrolled, setScrolled] = useState(false)
   const [filter, setFilter] = useState('all')
@@ -130,7 +156,9 @@ function App() {
       {/* NAV */}
       <nav className={`nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="container nav-inner">
-          <div className="nav-logo">Civil <span>Sutra</span></div>
+          <div className="nav-logo">
+            <span className="nav-logo-text">Civil <span>Sutra</span></span>
+          </div>
           <ul className="nav-links">
             <li><a href="#home" onClick={e => { e.preventDefault(); scrollTo('home') }}>Home</a></li>
             <li><a href="#services" onClick={e => { e.preventDefault(); scrollTo('services') }}>Services</a></li>
@@ -163,7 +191,7 @@ function App() {
         <div className="hero-bg" />
         <div className="container hero-content">
           <div className="hero-text">
-            <p className="section-label">Civil Sutra Associates</p>
+            <p className="section-label">Civil Engineers & Contractors</p>
             <h1>Building Your <span className="highlight">Vision</span> Into Reality</h1>
             <p>End-to-end civil engineering solutions in Shivamogga. From architectural design to construction, we deliver quality that stands the test of time.</p>
             <div className="hero-buttons">
@@ -200,30 +228,43 @@ function App() {
         </div>
       </section>
 
+      {/* ANGLED TRANSITION TO SERVICES */}
+      <div className="section-angle section-angle--cream" />
+
       {/* SERVICES */}
       <section className="services" id="services">
         <div className="container">
-          <div className="services-header">
+          <Reveal className="reveal services-header">
             <p className="section-label">What We Do</p>
             <h2 className="section-title">Our Premium Services</h2>
             <p className="section-subtitle">Comprehensive civil construction solutions tailored to your needs, from concept to completion.</p>
-          </div>
+          </Reveal>
           <div className="services-grid">
-            {services.map(s => (
-              <div className="service-card" key={s.title}>
+            {services.map((s, i) => (
+              <Reveal className="reveal service-card" delay={i + 1} key={s.title}>
                 <div className="service-icon">{s.icon}</div>
                 <h3>{s.title}</h3>
                 <p>{s.desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
+
+          {/* Expertise Tags from logo */}
+          <Reveal className="reveal services-tags">
+            {expertiseTags.map(tag => (
+              <div className="service-tag" key={tag}>
+                <span className="service-tag-dot" />
+                {tag}
+              </div>
+            ))}
+          </Reveal>
         </div>
       </section>
 
       {/* PROJECTS */}
       <section className="projects" id="projects">
         <div className="container">
-          <div className="projects-header">
+          <Reveal className="reveal projects-header">
             <div>
               <p className="section-label">Our Portfolio</p>
               <h2 className="section-title">Featured Projects</h2>
@@ -235,10 +276,10 @@ function App() {
                 </button>
               ))}
             </div>
-          </div>
+          </Reveal>
           <div className="projects-grid">
-            {filtered.map(p => (
-              <div className="project-card" key={p.name}>
+            {filtered.map((p, i) => (
+              <Reveal className="reveal project-card" delay={Math.min(i % 3 + 1, 3)} key={p.name}>
                 <div className="project-card-image">
                   <img src={p.image} alt={p.name} loading="lazy" />
                   <span className={`project-card-badge ${p.status === 'completed' ? 'badge-completed' : 'badge-ongoing'}`}>
@@ -258,7 +299,7 @@ function App() {
                     {p.specs.area && <span className="project-spec"><strong>Area:</strong> {p.specs.area}</span>}
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -266,20 +307,20 @@ function App() {
 
       {/* CTA */}
       <section className="cta">
-        <div className="container">
+        <Reveal className="reveal container">
           <h2>Have a Project in Mind?</h2>
           <p>Let's discuss how we can bring your vision to life with our expert construction services.</p>
-          <a className="btn btn-dark" href="#contact" onClick={e => { e.preventDefault(); scrollTo('contact') }}>
+          <a className="btn btn-primary" href="#contact" onClick={e => { e.preventDefault(); scrollTo('contact') }}>
             Get a Free Consultation
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
-        </div>
+        </Reveal>
       </section>
 
       {/* ABOUT */}
       <section className="about" id="about">
         <div className="container about-grid">
-          <div className="about-text">
+          <Reveal className="reveal-left about-text">
             <p className="section-label">About Us</p>
             <h2 className="section-title">Building Excellence Since 2010</h2>
             <p>Civil Sutra Associates is a leading civil construction company based in Shivamogga, Karnataka. With over 15 years of experience, we specialize in residential, commercial, and institutional construction projects.</p>
@@ -294,26 +335,26 @@ function App() {
                 </div>
               ))}
             </div>
-          </div>
-          <div className="about-counters">
+          </Reveal>
+          <Reveal className="reveal-right about-counters">
             <div className="about-counter"><h3>15+</h3><p>Years</p></div>
             <div className="about-counter"><h3>50+</h3><p>Projects</p></div>
             <div className="about-counter"><h3>100+</h3><p>Clients</p></div>
             <div className="about-counter"><h3>25K+</h3><p>Sqft Built</p></div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* CONTACT */}
       <section className="contact" id="contact">
         <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: 60 }}>
-            <p className="section-label">Get In Touch</p>
+          <Reveal style={{ textAlign: 'center', marginBottom: 60 }}>
+            <p className="section-label" style={{ justifyContent: 'center' }}>Get In Touch</p>
             <h2 className="section-title">Contact Us</h2>
             <p className="section-subtitle" style={{ margin: '0 auto' }}>Have a project in mind? Reach out to us and let's build something great together.</p>
-          </div>
+          </Reveal>
           <div className="contact-grid">
-            <div className="contact-info-cards">
+            <Reveal className="reveal-left contact-info-cards">
               <div className="contact-info-card">
                 <div className="contact-info-icon">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -350,8 +391,8 @@ function App() {
                   <p>Monday - Saturday: 9:00 AM - 6:00 PM</p>
                 </div>
               </div>
-            </div>
-            <form className="contact-form" onSubmit={e => e.preventDefault()}>
+            </Reveal>
+            <Reveal className="reveal-right contact-form" as="form" onSubmit={e => e.preventDefault()}>
               <h3>Send Us a Message</h3>
               <div className="form-row">
                 <div className="form-group">
@@ -386,7 +427,7 @@ function App() {
                 Send Message
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
-            </form>
+            </Reveal>
           </div>
         </div>
       </section>
