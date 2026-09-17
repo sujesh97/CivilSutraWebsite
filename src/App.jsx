@@ -171,7 +171,9 @@ function App() {
       <nav className={`nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="container nav-inner">
           <div className="nav-logo">
-            <span className="nav-logo-text">Civil <span>Sutra</span></span>
+            <div className="nav-logo-img-wrap">
+              <img src="/logo.png" alt="Civil Sutra Associates" className="nav-logo-img" />
+            </div>
           </div>
           <ul className="nav-links">
             <li><a href="#home" onClick={e => { e.preventDefault(); scrollTo('home') }}>Home</a></li>
