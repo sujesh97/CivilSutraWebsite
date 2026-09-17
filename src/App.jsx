@@ -133,10 +133,14 @@ const expertiseTags = [
   'Building Licence', 'Supervision', 'Estimates'
 ]
 
+const MOBILE_PROJECT_LIMIT = 3
+
 function App() {
   const [scrolled, setScrolled] = useState(false)
   const [filter, setFilter] = useState('all')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [showAllProjects, setShowAllProjects] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)
@@ -144,7 +148,17 @@ function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    const update = () => { setIsMobile(mq.matches); setShowAllProjects(false) }
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
   const filtered = filter === 'all' ? projects : projects.filter(p => p.status === filter)
+  const visibleProjects = isMobile && !showAllProjects ? filtered.slice(0, MOBILE_PROJECT_LIMIT) : filtered
+  const hasMore = isMobile && !showAllProjects && filtered.length > MOBILE_PROJECT_LIMIT
 
   const scrollTo = (id) => {
     setMenuOpen(false)
@@ -278,7 +292,7 @@ function App() {
             </div>
           </Reveal>
           <div className="projects-grid">
-            {filtered.map((p, i) => (
+            {visibleProjects.map((p, i) => (
               <Reveal className="reveal project-card" delay={Math.min(i % 3 + 1, 3)} key={p.name}>
                 <div className="project-card-image">
                   <img src={p.image} alt={p.name} loading="lazy" />
@@ -302,6 +316,11 @@ function App() {
               </Reveal>
             ))}
           </div>
+          {hasMore && (
+            <button className="show-more-btn" onClick={() => setShowAllProjects(true)}>
+              View All {filtered.length} Projects ↓
+            </button>
+          )}
         </div>
       </section>
 
@@ -440,7 +459,7 @@ function App() {
               <h3>Civil <span>Sutra</span> Associates</h3>
               <p>Delivering excellence in civil construction with over 15 years of experience. We build dreams into reality with precision, innovation, and quality craftsmanship.</p>
             </div>
-            <div>
+            <div className="footer-col-hide">
               <h4>Quick Links</h4>
               <ul className="footer-links">
                 {['Home','Services','Projects','About','Contact'].map(l => (
@@ -448,7 +467,7 @@ function App() {
                 ))}
               </ul>
             </div>
-            <div>
+            <div className="footer-col-hide">
               <h4>Services</h4>
               <ul className="footer-links">
                 <li><a href="#services">Residential Construction</a></li>
@@ -457,7 +476,7 @@ function App() {
                 <li><a href="#services">Renovation & Remodeling</a></li>
               </ul>
             </div>
-            <div>
+            <div className="footer-contact-mobile">
               <h4>Contact Info</h4>
               <ul className="footer-links">
                 <li>40, 41 Sri Thippeswamy Complex, 100 Feet Road, Rajendranagar, Shivamogga</li>
